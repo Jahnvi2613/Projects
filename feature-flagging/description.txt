@@ -1,0 +1,267 @@
+FINAL CAPSTONE PROJECT DESCRIPTION
+
+TEAM MEMBERS-
+
+Name-Ashmit Thakur || Uid-23BAI70503
+Name-Jahnvi || Uid-23Bai70330
+
+
+Real-Time Feature Flag Management System (MERN + Redis)
+Dynamic Runtime Feature Control and Rollout Management Console
+1. Project Overview
+
+The Feature Flag Management System is a real-time, MERN-based control platform that allows developers and operators to dynamically enable, disable, or target application features without redeploying or restarting the application.
+
+It is divided into three main components:
+
+Admin UI (admin-ui/) – A React-based dashboard for flag creation, editing, and rollout simulation.
+
+Backend API (backendd/) – A Node.js (Express) service connected to MongoDB and Redis for real-time flag management and evaluation.
+
+Testing Client (testing-app/) – A sample React application integrated with a lightweight SDK to demonstrate real-time flag consumption and dynamic updates.
+
+This project implements feature flagging as a service, integrating Redis Pub/Sub for instant flag propagation, MongoDB for persistent storage, and Express APIs for flag evaluation and configuration.
+
+The system is designed for progressive delivery, A/B testing, and continuous deployment environments, allowing developers to ship features confidently and toggle them instantly in production.
+
+2. Objectives
+
+To create a real-time feature flag management system using MERN + Redis.
+
+To toggle and target features dynamically based on environment or user attributes.
+
+To ensure low-latency evaluation of feature flags using Redis caching and Pub/Sub messaging.
+
+To provide a React-based admin console for flag management and live monitoring.
+
+To implement a safe and observable flag evaluation SDK for client-side and backend consumers.
+
+3. System Architecture
+
+The project follows a modular three-tier design:
+
+🗄️ Backend (Node.js + Express + MongoDB + Redis)
+
+Acts as the core API and flag evaluation engine.
+
+Stores flag definitions in MongoDB (Flag.js model).
+
+Uses Redis (redisClient.js) for caching hot flags and Pub/Sub for notifying connected clients about flag changes.
+
+Exposes REST endpoints (flags.js, evaluate.js) for CRUD operations and real-time evaluation.
+
+Includes a realtime.js module that handles synchronization events and subscription channels.
+
+🖥️ Admin UI (React)
+
+Located in admin-ui/src/.
+
+Provides an intuitive interface to:
+
+Create, edit, and archive flags (FlagForm.js).
+
+View all existing flags, their status, and metadata (AdminPanel.js).
+
+Communicates with the backend using REST APIs to manage feature definitions.
+
+Uses Axios and React Hooks for data handling and real-time updates.
+
+Provides toggles and input forms for feature configuration.
+
+⚙️ Testing App + SDK
+
+A separate sandbox located in testing-app/ that demonstrates how real applications consume feature flags.
+
+The folder testing-app/src/feature-flag-sdk/ includes:
+
+index.js – SDK logic to call the backend evaluation API and determine flag states using isEnabled(flag, context).
+
+Built to be easily integrated with any React or Node.js client for testing feature gating.
+
+The main component DemoApp.js demonstrates toggling live features based on flag evaluation results.
+
+4. Key Features
+ 1. Flag Models and Metadata
+
+Each flag (defined in Flag.js) includes:
+
+name, key, description, type, and status.
+
+Lifecycle states: draft, active, archived.
+
+Metadata like owner, tags, and creation date.
+
+ 2. Targeting Rules
+
+Supports environment-based targeting (e.g., dev, staging, prod).
+
+Percentage-based rollouts for controlled experiments.
+
+User-based context evaluation via SDK (region, plan, role).
+
+Deterministic hashing to ensure consistent rollout allocation.
+
+ 3. Real-Time Updates (Redis Pub/Sub)
+
+When a flag is created or updated, the backend:
+
+Saves the new state to MongoDB.
+
+Updates Redis cache with the new flag.
+
+Publishes an event using Redis Pub/Sub channels.
+
+Connected clients or SDK instances subscribed to the Redis channel receive updates instantly.
+
+ 4. Evaluation API
+
+Implemented in backendd/src/routes/evaluate.js.
+
+Receives a context object and returns the evaluated result of a flag:
+
+POST /api/evaluate
+{
+  "flagKey": "new-feature",
+  "context": { "userId": 123, "plan": "premium" }
+}
+
+
+Response:
+
+{ "isEnabled": true }
+
+
+Evaluator logic ensures deterministic behavior and safe fallback when Redis is unavailable.
+
+ 5. Admin UI (React Dashboard)
+
+AdminPanel.js – Displays all flags with current status.
+
+FlagForm.js – Interface to create or edit a flag’s metadata and targeting rules.
+
+Implements real-time UI updates upon backend changes.
+
+Responsive design with clear input validation and confirmation dialogs.
+
+ 6. Testing SDK
+
+Found under testing-app/src/feature-flag-sdk/.
+
+Provides helper methods to fetch, cache, and evaluate flags locally.
+
+Supports periodic refresh and instant update through Redis Pub/Sub or API polling.
+
+Allows easy embedding in any frontend or backend service.
+
+5. Data Flow
+ End-to-End Flow
+
+Admin creates or updates a flag from the React dashboard.
+
+Backend (flags.js) saves the flag to MongoDB and publishes changes via Redis.
+
+Redis broadcasts the update to all subscribers (applications or SDKs).
+
+Client SDK receives the update and updates its in-memory flag state.
+
+When an app calls isEnabled(flag, context), the SDK evaluates conditions deterministically and returns a consistent boolean result.
+
+This flow ensures instant rollout and rollback of features across distributed environments.
+
+6. Folder-by-Folder Explanation
+ backendd/
+
+index.js – Entry point for Express backend. Initializes MongoDB and Redis connections.
+
+src/config/db.js – MongoDB configuration and connection handling.
+
+src/models/Flag.js – Mongoose schema defining flag structure and lifecycle states.
+
+src/routes/flags.js – Routes for CRUD operations (create, update, delete, list).
+
+src/routes/evaluate.js – Evaluation API for clients.
+
+src/services/redisClient.js – Redis client setup, Pub/Sub handling.
+
+src/realtime.js – Listens to Redis channels for real-time updates and broadcasts changes.
+
+ admin-ui/
+
+src/components/AdminPanel.js – Main dashboard to view all existing flags.
+
+src/components/FlagForm.js – Form interface for flag creation and updates.
+
+App.js – Routes between dashboard and flag management pages.
+
+index.js / index.css – Entry points for React rendering and styling.
+
+ testing-app/
+
+src/DemoApp.js – Demonstrates flag-based UI rendering.
+
+src/feature-flag-sdk/index.js – Core SDK logic for flag evaluation and API interaction.
+
+package.json – SDK dependencies and configuration for modular reuse.
+
+7. Technologies Used
+Layer	Technology	Purpose
+Frontend	React.js	Admin UI and Testing App
+Backend	Node.js + Express	API & flag evaluation logic
+Database	MongoDB	Persistent flag storage
+Cache Layer	Redis	Low-latency flag reads + Pub/Sub updates
+SDK	JavaScript	Client-side evaluation
+Security	dotenv, CORS, JWT (future scope)	Secure access control
+Tooling	Docker / npm	Environment management & packaging
+8. Current Status
+Feature	Implementation
+Boolean flags	✅ Implemented
+Multivariate flags	🔄 Planned
+Percentage rollout	✅ Implemented
+Redis Pub/Sub	✅ Implemented
+Audit logging	🔄 Partially implemented
+JWT Authentication	🔄 Planned
+Role-based access	🔄 Planned
+Flag evaluation API	✅ Fully implemented
+SDK for client apps	✅ Implemented
+Docker Compose	🔄 Optional setup in progress
+9. Advantages
+
+Enables real-time feature control without redeploying applications.
+
+Supports gradual rollout and instant rollback.
+
+Provides a unified platform for developers and operations teams.
+
+Redis Pub/Sub ensures synchronized state across instances.
+
+Modular, scalable, and extensible architecture.
+
+Facilitates A/B testing and experimentation in production.
+
+10. Future Enhancements
+
+Implement multivariate flag types (string, JSON, variant-based).
+
+Add audit trail UI for monitoring changes and user actions.
+
+Integrate JWT authentication and user roles in Admin UI.
+
+Add metrics visualization (cache hit rate, evaluation latency).
+
+Provide Docker Compose setup for easy local deployment.
+
+Build CI/CD integration for automated rollout testing.
+
+11. Conclusion
+
+The Feature Flag Management System successfully demonstrates how to design and implement a real-time configuration control platform using MERN and Redis.
+
+It bridges the gap between development and deployment by allowing teams to:
+
+Test features safely in production,
+
+Deliver progressively, and
+
+Maintain system stability even under continuous release conditions.
+
+The modular separation into backendd, admin-ui, and testing-app showcases clear software design, scalability, and maintainability principles — making this project a strong practical example of cloud-ready feature flag management.
