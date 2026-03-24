@@ -1,0 +1,74 @@
+                                          LIVE CHARACTER COUNTER
+1. FEATURE: Page Layout
+Requirement:
+The page should have a simple layout consisting of a title (heading), a text input area, and a section to display the live character count.
+Functionality:
+A header (H1) displays the title "Live Character Counter".
+A textarea lets users type their text.
+A counter div updates dynamically as the user types.
+Layout is centered and styled neatly with CSS.
+2. FEATURE: Live Character Counter
+Requirement:
+Users should be able to see the number of characters they have typed instantly without refreshing the page.
+Functionality:
+A JavaScript addEventListener continuously tracks the textarea input.
+The length of the text is calculated using .value.length.
+The result is displayed inside the counter div in real time.
+1. ELEMENT: body (Page Background)
+Purpose: Provide the base style for the entire webpage.
+Properties & Effects:
+background-color: #f4f4f4; → Light grey background for soft contrast.
+margin: 0; → Removes default browser margin.
+padding: 20px; → Creates inner space around the page.
+border: black 1px solid; → Thin outline around the page.
+2. ELEMENT: .container (Main Content Box)
+Purpose: Groups the heading, textarea, and counter into a styled white box.
+Properties & Effects:
+margin: auto; → Centers the box horizontally.
+background: white; → White background for clarity.
+padding: 20px; → Space inside container for better layout.
+border: 1px solid black; → Thin border for separation (correction from border-color).
+3. ELEMENT: h1 (Title Heading)
+Purpose: Displays the page heading.
+Properties & Effects:
+Inline CSS text-align: center; → Centers the heading horizontally.
+Large, bold heading signifies importance of the feature.
+4. ELEMENT: textarea (User Input Box)
+Purpose: Allows the user to type text that will be counted.
+Properties & Effects:
+width: 100%; → Expands across the container width.
+height: 100px; → Fixed height for typing multiple lines.
+padding: 10px; → Inner spacing makes text readable.
+font-size: 12px; → Smaller font for compact input.
+border-radius: 5px; → Smooth, rounded corners.
+border: 3px solid black; → Bold outline for emphasis.
+5. ELEMENT: #charCount (Counter Display Div)
+Purpose: Displays the live number of characters typed.
+Properties & Effects:
+Default text "Character Count: 0" is shown when the page loads.
+Dynamically updated by JavaScript with each keystroke.
+⚙️ JavaScript Functionality Breakdown
+1. ELEMENT: document.getElementById('inputbox')
+Purpose: Selects the textarea where users type text.
+Effect: Allows JavaScript to access and monitor the input box.
+2. ELEMENT: document.getElementById('charCount')
+Purpose: Selects the div used for displaying character count.
+Effect: Allows JavaScript to update its content dynamically
+3. ELEMENT: inputBox.addEventListener('input', function(){...})
+Purpose: Listens for input events (typing, deleting, pasting) inside textarea.
+Effect: Ensures the counter updates instantly whenever the content changes.
+4. ELEMENT: inputBox.value.length
+Purpose: Calculates the number of characters typed by the user.
+Effect: Produces the count value that will be displayed on screen.
+5. ELEMENT: charCount.textContent = 'Character Count: ' + count;
+Purpose: Updates the display text with the new character count.
+Effect: Shows real-time feedback below the textarea. 
+LEARNING OUTCOMES
+By working with this project, you will learn:
+How to structure a simple web application using HTML, CSS, and JavaScript.
+How to use CSS properties such as margin, padding, borders, and box model for layout design.
+How to manipulate DOM elements using JavaScript methods like getElementById.
+How to handle events in JavaScript (e.g., input) for real-time updates.
+How to create interactive features (live counters, input trackers) without page reload.
+How to separate concerns: HTML for structure, CSS for styling, JavaScript for behavior
+Practical applications of counters in forms, social media platforms, or SMS applications.

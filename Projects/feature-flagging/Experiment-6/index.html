@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SVG Freehand Drawing Tool</title>
+  <style>
+    body {
+      font-family:'Times New Roman', Times, serif;
+      text-align: center;
+      margin: 30px;
+    }
+    svg {
+      border: 10px solid #f14545;
+      background: #100f0f;
+      cursor:grabbing;
+    }
+  </style>
+</head>
+<body>
+  <h2>SVG Drawing Tool</h2>
+  <svg id="drawingArea" width="800" height="500"></svg>
+
+  <script>
+    const svg = document.getElementById("drawingArea");
+    let drawing = false;
+    let currentPath = null;
+
+    // Start freehand drawing
+    svg.addEventListener("mousedown", (e) => {
+      drawing = true;
+      const { x, y } = getMousePosition(e);
+      currentPath = createPath(x, y);
+      svg.appendChild(currentPath);
+    });
+
+
+    svg.addEventListener("mousemove", (e) => {
+      if (!drawing) return;
+      const { x, y } = getMousePosition(e);
+      let d = currentPath.getAttribute("d");
+      currentPath.setAttribute("d", d + ` L ${x} ${y}`);
+    });
+
+
+    svg.addEventListener("mouseup", () => {
+      drawing = false;
+      currentPath = null;
+    });
+
+    function createPath(x, y) {
+      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      path.setAttribute("d", `M ${x} ${y}`);
+      path.setAttribute("stroke", "white");
+      path.setAttribute("stroke-width", "2");
+      path.setAttribute("fill", "none");
+      return path;
+    }
+
+    // Get mouse position relative to SVG
+    function getMousePosition(event) {
+      const rect = svg.getBoundingClientRect();
+      return {
+        x: event.clientX - rect.left,
+        y: event.clientY - rect.top
+      };
+    }
+  </script>
+</body>
+</html>

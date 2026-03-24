@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dynamic Product Filter</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+    .container {
+      border: 3px solid #000;
+      padding: 15px;
+      width: 400px;
+      margin: 12px auto;
+    }
+    h2 {
+        font-size: 35px;
+      margin-bottom: 12px;
+      padding-top: 0px;
+    }
+    select {
+      padding: 7px;
+      margin-bottom: 20px;
+      border: #8fcf27 solid 1.5px;
+    }
+    .product {
+      border: 1px solid #f444c8;
+      padding: 15px;
+      margin: 6px 0;
+      border-radius: 15px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h2>Product List</h2>
+
+    <label for="categoryFilter">Filter by Category: </label>
+    <select id="categoryFilter">
+      <option value="All">All</option>
+      <option value="Clothing">Clothing</option>
+      <option value="Electronics">Electronics</option>
+      <option value="Books">Books</option>
+    </select>
+
+    <div id="productList"></div>
+  </div>
+
+  <script>
+    const products = [
+      { name: "T-Shirt", category: "Clothing" },
+      { name: "Jeans", category: "Clothing" },
+      { name: "Headphones", category: "Electronics" },
+      { name: "Smartphone", category: "Electronics" },
+      { name: "Novel", category: "Books" },
+      { name: "Cookbook", category: "Books" }
+    ];
+
+    const productList = document.getElementById("productList");
+    const categoryFilter = document.getElementById("categoryFilter");
+    
+    function displayProducts(filteredProducts) {
+      productList.innerHTML = ""; 
+      filteredProducts.forEach(product => {
+        const item = document.createElement("div");
+        item.className = "product";
+        item.textContent = product.name;
+        productList.appendChild(item);
+      });
+    }
+    displayProducts(products);
+
+    categoryFilter.addEventListener("change", function() {
+      const selectedCategory = categoryFilter.value;
+      if (selectedCategory === "All") {
+        displayProducts(products);
+      } else {
+        const filtered = products.filter(
+          product => product.category === selectedCategory
+        );
+        displayProducts(filtered);
+      }
+    });
+  </script>
+
+</body>
+</html>

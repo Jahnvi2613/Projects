@@ -1,0 +1,25 @@
+The readline module creates an interface between the input stream (e.g., keyboard input) and output stream (e.g., terminal window).
+This interface waits for the user to input a line of text and then processes that input asynchronously.
+It keeps the Node.js process alive until the interface is explicitly closed, making it suitable for interactive CLI tools.
+Creating a Readline Interface
+The interface is created with the method readline.createInterface().
+This method requires at least two parameters: an input stream to listen for input (process.stdin for keyboard input) and an output stream to write to (process.stdout for displaying prompts).
+Optionally, you can also configure a prompt string (shown to guide user input) and features like tab completion or history.
+Common Methods
+question(query, callback): Prompts the user with the given query string and waits for input. When the user submits input (by pressing Enter), the callback function is called with the input as its argument. It’s often used for sequential questions.
+on('line', callback): Registers an event listener to handle every line of input entered by the user, useful for continuous line reading or multi-step prompts.
+close(): Closes the interface, freeing resources and allowing the Node.js process to exit cleanly.
+prompt() and setPrompt(): Used to display and customize prompt messages dynamically.
+Handling User Input
+When using question, the application pauses flow and waits for the user response asynchronously.
+Once input is received, the callback processes it, and the interface can either continue accepting input or close.
+For multi-step interactions (like menus or forms), prompts are nested or chained, ensuring users complete necessary steps one at a time.
+Example Usage
+When building a CLI app, the module lets you display menus, accept choices, validate responses, and move between different application tates.
+It’s common to show a menu repeatedly, handle user selections, and perform appropriate actions based on those selections.
+The asynchronous design means the rest of the program waits for user input events naturally without blocking the whole Node.js event loop.
+Limitations and Strengths
+readline works best for text-based, line-oriented input-output interactions.
+It’s not suited for complex GUIs or graphical interfaces but excels for terminal-based utilities, setup scripts, and interactive prompts.
+Being event-driven and asynchronous, it fits well into Node.js’s non-blocking architecture, making CLI interactivity seamless without freezing other processes.
+In summary, the readline module is essential for writing user-interactive command-line tools in Node.js. It provides a straightforward interface to read user input, display prompts, and control the flow of a terminal-based session, all while integrating cleanly with Node’s asynchronous event-driven runtime

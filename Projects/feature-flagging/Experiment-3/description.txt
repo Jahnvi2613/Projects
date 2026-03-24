@@ -1,0 +1,80 @@
+ADMIN DASHBOARD – LAYOUT & THEME TOGGLE
+1. FEATURE: Page Layout
+Requirement: The page should have four sections — Header, Sidebar, Main Content, and Footer — arranged neatly using CSS Grid.
+Functionality:
+Header covers the top and contains the page title and theme toggle label.
+Sidebar is fixed to the left with navigation links like users,setting,home.
+Main Content area displays welcome text and placeholder for admin data.
+Footer spans the bottom showing copyright.
+
+2. FEATURE: Dark Theme Toggle
+Requirement: Users should be able to switch between light mode and dark mode without reloading the page.
+Functionality:
+Toggle is controlled by a hidden checkbox linked to a clickable label "Dark Theme".
+When checked, CSS variables change the background colors of header, footer, and sidebar to dark shades and text to white.
+No JavaScript used — the effect is purely CSS-based.
+CSS Styling Breakdown
+1. ELEMENT: :root (CSS Variables)
+Purpose: Store  colors in one place so they can be changed easily.
+Properties & Effects:
+--bg-header → Default header background (light green).
+--bg-footer → Default footer background (light green).
+--bg-nav → Default sidebar background (light gray).
+
+2. ELEMENT: input[type="checkbox"] (Theme Toggle Control)
+Purpose: Hide the checkbox but keep it functional.
+display: none; → Makes checkbox invisible while label still changes it.
+
+3. ELEMENT: * (Global Settings)
+Purpose: Apply consistent spacing and box sizing across all elements.
+Properties:
+margin: 10px; → Sets outer space around elements.
+padding: 0; → Removes default inner space.
+box-sizing: border-box; → Includes padding/border in element’s total size.
+
+4. ELEMENT: div (Main Grid Container)
+Purpose: Arrange header, sidebar, content, and footer using CSS Grid.
+Properties & Effects:
+display: grid; → Activates grid layout.
+grid-template-columns: 160px auto; → Sidebar fixed, main content flexible.
+grid-template-rows: 120px auto 60px; → Defines header, content, footer heights.
+height: 100vh; → Full screen height layout.
+
+5. ELEMENT: header (Top Section)
+Purpose: Displays title and theme label.
+Properties & Effects:
+grid-column: 1 / span 2; → Stretches across full width.
+display: flex; justify-content: space-between; → Title left, toggle right.
+background-color: var(--bg-header); → Uses theme variable.
+border: 1px solid black; → Visible outline.
+
+6. ELEMENT: footer (Bottom Section)
+Purpose: Shows footer text.
+Properties & Effects:
+grid-column: 1 / span 2; → Stretches full width.
+background-color: var(--bg-footer); → Uses theme variable.
+padding: 10px; → Inner spacing for text.
+7. ELEMENT: nav (Sidebar)
+Purpose: Displays navigation menu links.
+Properties & Effects:
+background-color: var(--bg-nav); → Uses theme variable.
+border: 1px solid black; → Border outline.
+padding: 20px; → Space inside the menu.
+
+8. ELEMENT: main (Content Area)
+Purpose: Holds dashboard content.
+Properties & Effects:
+padding: 20px; → Internal spacing for readability.
+border: 1px solid black; → Content border
+font-family: 'Courier New', monospace; → Monospaced text style.
+9. ELEMENT: input:checked ~ div (Dark Theme Effect)
+Purpose: Apply dark theme colors when toggle is active.
+Properties & Effects:
+Changes --bg-header, --bg-footer, --bg-nav to darker shades.
+Sets text color: white; for readability.
+
+LEARNING OUTCOMES
+1.How to create a complete Admin Dashboard layout using HTML and CSS Grid.
+2.How to store and apply CSS variables for theme customization.
+3.How to implement a dark theme toggle using only CSS and a hidden checkbox.
+4.How to structure HTML semantically for better organization.

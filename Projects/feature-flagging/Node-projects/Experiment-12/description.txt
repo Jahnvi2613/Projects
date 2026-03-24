@@ -1,0 +1,80 @@
+This Express.js application implements a basic ticket booking system for managing seat reservations. It demonstrates key concepts of state management, user locking, and timed seat release, all using an in-memory data structure. Below is a detailed explanation of each part of the system:
+
+Overall Purpose
+The application simulates a real-time ticket booking backend where multiple users can attempt to lock seats temporarily to ensure they do not get booked by others while they complete payment or confirmation. If the user does not confirm the booking within a time limit, the seat lock expires and the seat becomes available again.
+
+Key Data Structure: Seats Object
+The seats object holds seat records indexed by seat numbers (1 to 5).
+
+Each seat has three attributes:
+
+status: Can be "available", "locked", or "booked".
+
+lockedBy: The user who currently holds the lock on the seat.
+
+lockTimer: A timer reference for auto-releasing locks after expiration.
+
+This state model allows the app to track each seat’s current booking state and which user is interacting with it.
+
+API Endpoints and Behavior
+1. Viewing Seat Status — GET /seats
+Returns the current status (available, locked, or booked) for each seat.
+
+This lets clients see seat availability in real time.
+
+2. Locking a Seat — POST /lock
+Requires the client to specify seatId and userId.
+
+Verifies the seat exists; returns error if invalid.
+
+If the seat is already booked, locking is denied.
+
+If seat is locked by another user, locking is denied.
+
+If seat is available or already locked by the same user:
+
+Mark status as "locked".
+
+Set lockedBy to userId.
+
+Set/reset the lockTimer to 60 seconds, after which the lock automatically expires and the seat becomes "available" again. A console message logs this expiration.
+
+Returns success message if lock acquired or if already locked by the same user.
+
+This prevents seat conflicts by allowing a single user to temporarily reserve a seat while completing checkout.
+
+3. Confirming a Booking — POST /confirm
+Requires seatId and userId.
+
+Validates the seat exists.
+
+Verifies that the seat is currently locked by the same user; otherwise, returns an error.
+
+Marks the seat as "booked" permanently and clears lockedBy.
+
+Clears the lockTimer to prevent auto-release after confirmation.
+
+Returns a booking success message.
+
+This finalizes the temporary lock into a confirmed booking.
+
+Booking Logic Highlights
+The locking mechanism with a timeout prevents seats from being unfairly held indefinitely.
+
+A lock timer (setTimeout) automatically frees locks after 60 seconds if confirmation doesn’t happen.
+
+The status states (“available”, “locked”, “booked”) clearly define each seat’s lifecycle.
+
+Using in-memory data means the state resets if the server restarts, so this is mostly a prototype or learning example.
+
+Scalability and Improvements
+In production, the system would likely use a persistent backend database.
+
+Lock aging could be managed robustly across distributed environments.
+
+Additional endpoints for unlocking or retrieving user-specific locked seats could be added.
+
+User authentication and session management could enforce authorization for seat locking.
+
+Summary
+This app exemplifies a small but practical ticket booking API with real-time seat locking, timed expiration, and confirmation processes. It demonstrates critical concepts needed for fair resource allocation in multi-user reservation systems and provides a good base for extending into a full-featured booking platform

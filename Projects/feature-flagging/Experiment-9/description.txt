@@ -1,0 +1,56 @@
+The code demonstrates how to create a base class and extend it with subclasses in JavaScript using ES6 classes. It provides a simple yet powerful example of inheritance, method overriding, and code reuse in object-oriented programming.
+Base Class: Person
+The Person class is a parent class that represents a generic person.
+It has two properties:
+name — stores the name of the person.
+age — stores the age of the person.
+The constructor:
+Takes two parameters (name and age) to initialize the object.
+It has a method called displayInfo:
+This method returns a string containing the person's name and age.
+Example output: "Name: Jahnvi, Age: 19".
+This class provides a basic structure and functionality that will be inherited by its subclasses.
+Subclass: Student (Extends Person)
+The Student class inherits from the base Person class using the keyword extends.
+Additional property:
+course — represents what course the student is enrolled in (e.g., "Computer Science AIML").
+In the constructor:
+It uses super(name, age) to call the parent class constructor, which initializes the inherited properties.
+Then it initializes the new property course.
+It overrides the displayInfo method:
+Calls super.displayInfo() to reuse the parent class method that returns name and age.
+Appends course information in the returned string.
+Example output: "Name: Jahnvi, Age: 19, Course: Computer Science AIML".
+This override demonstrates method overriding while still reusing existing code from the base class.
+Subclass: Teacher (Extends Person)
+The Teacher class also inherits from the Person class.
+Additional property:
+department — represents the teacher’s department or subject specialization (e.g., "Computer Science AIML").
+The constructor:
+Calls the parent constructor with super(name, age) to initialize common properties.
+Initializes its specific department property.
+It overrides the displayInfo method as well
+Calls the base displayInfo method with super.displayInfo().
+Adds department information to the string.
+Example output: "Name: Ms Vasudha, Age: 24, Department: Computer Science AIML".
+Creating Instances and Displaying Information
+Two objects are created:
+student1 is an instance of Student, with name "Jahnvi", age 19, and course "Computer Science AIML".
+teacher1 is an instance of Teacher, with name "Ms Vasudha", age 24, and department "Computer Science AIML".
+Both object's displayInfo methods are called to get their respective information strings.
+The results are displayed within the <pre> tag on the page.
+This shows how the same method name (displayInfo) behaves differently depending on the object type, called polymorphism.
+Object Oriented Concepts Illustrated
+Inheritance
+Student and Teacher reuse and extend Person’s properties and methods, eliminating duplicated code.
+Encapsulation:
+Each class bundles its data (name, age, course, department) and behavior (method displayInfo) inside a single unit.
+Polymorphism:
+The displayInfo method adapts behavior based on the object that calls it—Student includes course, and Teacher includes department.
+Super Keyword:
+Enables subclasses to call the parent’s constructor and methods (super(...), super.method()), allowing for code reuse and consistent initialization.
+Why is this Important?
+It demonstrates code reuse: Shared attributes and methods are defined once in the parent.
+It models real-world hierarchical relationships: A person can be a student or a teacher, sharing common traits but also having specific details.
+The structure makes the code organized, extensible, and easier to maintain.
+This knowledge forms the basis for working with more complex object-oriented designs in JavaScript and other programming languages

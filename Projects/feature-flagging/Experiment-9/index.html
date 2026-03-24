@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Person Class Hierarchy</title>
+</head>
+<body>
+  <h2>Person Class Hierarchy Demo</h2>
+  <pre id="output"></pre>
+
+  <script>
+    class Person {
+      constructor(name, age) {
+        this.name = name;
+        this.age = age;
+      }
+
+      displayInfo() {
+        return `Name: ${this.name}, Age: ${this.age}`;
+      }
+    }
+    class Student extends Person {
+      constructor(name, age, course) {
+        super(name, age);
+        this.course = course;
+      }
+
+      displayInfo() {
+        return `${super.displayInfo()}, Course: ${this.course}`;
+      }
+    }
+
+    // Teacher subclass extending Person
+    class Teacher extends Person {
+      constructor(name, age, department) {
+        super(name, age);
+        this.department = department;
+      }
+
+      displayInfo() {
+        return `${super.displayInfo()}, Department: ${this.department}`;
+      }
+    }
+
+    const student1 = new Student("Jahnvi", 19, "Computer Science AIML");
+    const teacher1 = new Teacher("Ms Vasudha", 24, "Computer Science AIML");
+
+    // Output results
+    const output = document.getElementById("output");
+    output.textContent =
+      "Student Details:\n" + student1.displayInfo() + "\n\n" +
+      "Teacher Details:\n" + teacher1.displayInfo();
+  </script>
+</body>
+</html>
