@@ -11,4 +11,4 @@ export const fetchHistory = (userId, limit = 20, skip = 0) =>
 export const deletePrediction = (id, userId) =>
   api.delete(`/predict/${id}`, { data: { userId } });
 
-export default api;
+export default apic

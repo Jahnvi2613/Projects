@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Spam Detector Pro</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+</head>
+<body onload="fetchHistory()">
+    <div class="dashboard">
+        <div class="container scanner-section">
+            <header>
+                <h1>Spam <span>Detector</span></h1>
+                <p>Advanced Machine Learning Engine</p>
+            </header>
+
+            <main>
+                <textarea id="emailText" placeholder="Paste the email content here to scan..."></textarea>
+                <button id="analyzeBtn" onclick="analyzeText()">Analyze Email</button>
+
+                <div id="resultCard" class="result-card hidden">
+                    <div id="statusIcon" class="icon"></div>
+                    <h2 id="resultText"></h2>
+                    <p id="confidenceText"></p>
+                </div>
+            </main>
+        </div>
+
+        <div class="container history-section">
+            <h2>Recent Activity Logs</h2>
+            <div class="table-container">
+                <table id="historyTable">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Email Snippet</th>
+                            <th>Status</th>
+                            <th>Confidence</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyBody">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function analyzeText() {
+            const textInput = document.getElementById('emailText').value;
+            const btn = document.getElementById('analyzeBtn');
+            const resultCard = document.getElementById('resultCard');
+
+            if (!textInput.trim()) return alert("Please enter text.");
+
+            btn.innerText = "Scanning...";
+            btn.disabled = true;
+            resultCard.classList.add('hidden');
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: textInput })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultCard.classList.remove('hidden');
+                    
+                    if (data.is_spam) {
+                        resultCard.className = 'result-card spam';
+                        document.getElementById('statusIcon').innerHTML = '⚠️';
+                        document.getElementById('resultText').innerText = 'Spam Detected!';
+                    } else {
+                        resultCard.className = 'result-card safe';
+                        document.getElementById('statusIcon').innerHTML = '✅';
+                        document.getElementById('resultText').innerText = 'Looks Safe';
+                    }
+                    document.getElementById('confidenceText').innerText = `${data.confidence}% confidence score.`;
+                    
+                    // Refresh the history table instantly
+                    fetchHistory();
+                }
+            } catch (error) {
+                console.error("Error:", error);
+            } finally {
+                btn.innerText = "Analyze Email";
+                btn.disabled = false;
+            }
+        }
+
+        async function fetchHistory() {
+            try {
+                const response = await fetch('/history');
+                const historyData = await response.json();
+                const tbody = document.getElementById('historyBody');
+                tbody.innerHTML = '';
+
+                historyData.forEach(item => {
+                    const row = document.createElement('tr');
+                    const statusClass = item.is_spam ? 'badge-spam' : 'badge-safe';
+                    const statusText = item.is_spam ? 'Spam' : 'Safe';
+                    
+                    // Formatting time to be more readable
+                    const timeString = new Date(item.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+                    row.innerHTML = `
+                        <td class="time-col">${timeString}</td>
+                        <td class="snippet-col">${item.snippet}</td>
+                        <td><span class="badge ${statusClass}">${statusText}</span></td>
+                        <td>${item.confidence}%</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            } catch (error) {
+                console.error("Failed to load history", error);
+            }
+        }
+    </script>
+</body>
+</html>

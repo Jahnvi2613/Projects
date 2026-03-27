@@ -1,187 +1,298 @@
-import requests
 import streamlit as st
+import requests
+from typing import Optional
+import math
 
-# =============================
-# CONFIG
-# =============================
-API_BASE = "http://127.0.0.1:8000"
+# ── Config ────────────────────────────────────────────────────────────────────
+API = "http://127.0.0.1:8000"
 TMDB_IMG = "https://image.tmdb.org/t/p/w500"
 
 st.set_page_config(
-    page_title="🎬 Movie Recommender",
+    page_title="CineAI – Movie Recommender",
     page_icon="🎬",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="expanded",
 )
 
-# =============================
-# STYLES
-# =============================
+# ── Custom CSS ────────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
-body {
-    background: linear-gradient(135deg,#0f0c29,#302b63,#24243e);
-}
-.movie-card {
-    background: rgba(255,255,255,0.12);
-    backdrop-filter: blur(12px);
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;600&display=swap');
+
+html, body, [class*="css"] { font-family: 'Inter', sans-serif; background: #0d0d0d; color: #eee; }
+
+h1, h2, h3 { font-family: 'Bebas Neue', sans-serif; letter-spacing: 2px; }
+
+.hero {
+    background: linear-gradient(135deg, #1a0a2e 0%, #16213e 50%, #0f3460 100%);
+    padding: 3rem 2rem 2rem;
     border-radius: 16px;
-    padding: 10px;
-    transition: 0.3s;
     text-align: center;
+    margin-bottom: 2rem;
 }
-.movie-card:hover {
-    transform: scale(1.05);
+.hero h1 { font-size: 4rem; color: #e94560; margin: 0; }
+.hero p  { color: #aaa; font-size: 1.1rem; }
+
+.movie-card {
+    background: #1a1a2e;
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border: 1px solid #2a2a4a;
+    transition: transform 0.2s, border-color 0.2s;
+    height: 100%;
 }
+.movie-card:hover { border-color: #e94560; transform: translateY(-2px); }
+
 .movie-title {
-    font-size: 14px;
-    font-weight: 600;
-    margin-top: 8px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.1rem;
+    color: #fff;
+    margin: 0.5rem 0 0.3rem;
+    letter-spacing: 1px;
 }
+.movie-meta { color: #888; font-size: 0.8rem; margin: 0.2rem 0; }
+
+.badge {
+    display: inline-block;
+    background: #0f3460;
+    color: #e94560;
+    border-radius: 20px;
+    padding: 2px 10px;
+    font-size: 0.72rem;
+    margin: 2px 2px 2px 0;
+    font-weight: 600;
+}
+.rating {
+    color: #ffd700;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+.score-pill {
+    background: #e94560;
+    color: white;
+    border-radius: 8px;
+    padding: 2px 8px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+.section-header {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2rem;
+    color: #e94560;
+    border-bottom: 2px solid #e94560;
+    padding-bottom: 0.3rem;
+    margin: 1.5rem 0 1rem;
+    letter-spacing: 2px;
+}
+.stTextInput > div > div > input {
+    background: #1a1a2e !important;
+    color: #fff !important;
+    border: 1px solid #e94560 !important;
+    border-radius: 8px !important;
+}
+.stSelectbox > div > div { background: #1a1a2e !important; }
+.stButton > button {
+    background: #e94560 !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 8px !important;
+    font-weight: 700 !important;
+    letter-spacing: 1px;
+}
+.stButton > button:hover { background: #c73652 !important; }
 </style>
 """, unsafe_allow_html=True)
 
-# =============================
-# HELPERS
-# =============================
-def api_get(path, params=None):
+# ── Helpers ───────────────────────────────────────────────────────────────────
+@st.cache_data(ttl=120)
+def fetch(endpoint: str, params: dict = None):
     try:
-        r = requests.get(f"{API_BASE}{path}", params=params, timeout=20)
+        r = requests.get(f"{API}{endpoint}", params=params, timeout=10)
         r.raise_for_status()
         return r.json()
     except Exception as e:
-        st.error(f"API error: {e}")
+        st.error(f"❌ API error: {e}")
         return None
 
+def star_rating(score: float) -> str:
+    filled = int(round(score / 2))
+    return "★" * filled + "☆" * (5 - filled)
 
-def movie_card(movie, clickable=False):
-    poster = movie.get("poster_url")
-    title = movie.get("title", "")
-    rating = movie.get("vote_average")
+def genre_badges(genres: list) -> str:
+    return " ".join(f'<span class="badge">{g}</span>' for g in genres[:3])
 
-    st.markdown('<div class="movie-card">', unsafe_allow_html=True)
+def render_movie_card(m: dict, show_score: bool = False):
+    score_html = ""
+    if show_score and "similarity_score" in m:
+        pct = int(m["similarity_score"] * 100)
+        score_html = f'<span class="score-pill">Match {pct}%</span>'
 
-    if poster:
-        st.image(poster, use_container_width=True)
+    overview = m.get("overview", "")
+    overview_short = (overview[:110] + "…") if len(overview) > 110 else overview
 
-    st.markdown(f'<div class="movie-title">{title}</div>', unsafe_allow_html=True)
+    st.markdown(f"""
+    <div class="movie-card">
+        <div class="movie-title">{m['title']}</div>
+        <div class="rating">{star_rating(m['vote_average'])} {m['vote_average']}/10</div>
+        <div class="movie-meta">📅 {m.get('year', '—')} &nbsp;|&nbsp; 👁 {m['vote_count']:,} votes &nbsp;|&nbsp; 🌐 {m['language'].upper()}</div>
+        <div style="margin:6px 0">{genre_badges(m['genres'])}</div>
+        <div class="movie-meta" style="margin-top:6px;line-height:1.5">{overview_short}</div>
+        {score_html}
+    </div>
+    """, unsafe_allow_html=True)
 
-    if rating:
-        st.caption(f"⭐ {rating}")
+def render_grid(movies_list: list, cols: int = 4, show_score: bool = False):
+    if not movies_list:
+        st.info("No movies found.")
+        return
+    rows = math.ceil(len(movies_list) / cols)
+    for r in range(rows):
+        columns = st.columns(cols)
+        for c in range(cols):
+            idx = r * cols + c
+            if idx < len(movies_list):
+                with columns[c]:
+                    render_movie_card(movies_list[idx], show_score)
 
-    if clickable:
-        if st.button("View", key=f"view-{movie['tmdb_id']}"):
-            st.session_state["selected_tmdb_id"] = movie["tmdb_id"]
-            st.session_state["selected_title"] = title
-            st.rerun()   # ✅ UPDATED (no experimental)
+# ── Sidebar ───────────────────────────────────────────────────────────────────
+with st.sidebar:
+    st.markdown("## 🎬 CineAI")
+    st.markdown("---")
+    page_nav = st.radio(
+        "Navigate",
+        ["🏠 Home", "🔍 Search", "🎭 Browse by Genre", "🤖 Get Recommendations", "📊 Stats"],
+        label_visibility="collapsed",
+    )
+    st.markdown("---")
+    st.markdown("<small style='color:#555'>Powered by FAISS + Sentence Transformers</small>", unsafe_allow_html=True)
 
-    st.markdown('</div>', unsafe_allow_html=True)
+# ── Pages ─────────────────────────────────────────────────────────────────────
 
-# =============================
-# SIDEBAR
-# =============================
-st.sidebar.title("🎥 Movie Recommender")
+# ── HOME ──────────────────────────────────────────────────────────────────────
+if page_nav == "🏠 Home":
+    st.markdown("""
+    <div class="hero">
+        <h1>🎬 CineAI</h1>
+        <p>Semantic movie recommendations powered by AI — 10,000 films at your fingertips</p>
+    </div>
+    """, unsafe_allow_html=True)
 
-mode = st.sidebar.radio(
-    "Choose mode",
-    ["🏠 Home", "🔍 Search Movie"]
-)
+    col1, col2, col3 = st.columns(3)
+    category_map = {"🔥 Popular": "popular", "⭐ Top Rated": "top_rated", "🆕 Recent": "recent"}
 
-category = st.sidebar.selectbox(
-    "Home category",
-    ["popular", "trending", "top_rated", "upcoming", "now_playing"]
-)
+    with col1:
+        category_label = st.selectbox("Category", list(category_map.keys()))
+    with col2:
+        per_page = st.selectbox("Per page", [12, 24, 36], index=1)
+    with col3:
+        page_num = st.number_input("Page", min_value=1, value=1, step=1)
 
-# =============================
-# MOVIE DETAILS (TOP SECTION)
-# =============================
-if "selected_tmdb_id" in st.session_state:
-    tmdb_id = st.session_state["selected_tmdb_id"]
-    title = st.session_state["selected_title"]
+    category = category_map[category_label]
+    data = fetch("/home", {"category": category, "limit": per_page, "page": page_num})
 
-    details = api_get(f"/movie/id/{tmdb_id}")
+    if data:
+        st.markdown(f"<div class='section-header'>{category_label} Movies &nbsp;<small style='font-size:1rem;color:#888'>Page {data['page']} / {data['total_pages']}</small></div>", unsafe_allow_html=True)
+        render_grid(data["results"], cols=4)
 
-    if details:
-        st.markdown("## 🎬 Selected Movie")
+# ── SEARCH ────────────────────────────────────────────────────────────────────
+elif page_nav == "🔍 Search":
+    st.markdown("<div class='section-header'>Semantic Search</div>", unsafe_allow_html=True)
+    st.markdown("Search by mood, theme, plot, or keywords — not just title.")
 
-        col1, col2 = st.columns([1, 2])
+    with st.form("search_form"):
+        query = st.text_input("Describe what you want to watch…", placeholder="e.g. space opera with robots and hope")
+        c1, c2, c3, c4 = st.columns(4)
+        with c1:
+            min_rating = st.slider("Min rating", 0.0, 10.0, 0.0, 0.5)
+        with c2:
+            genre_filter = st.text_input("Genre", placeholder="Drama")
+        with c3:
+            year_from = st.number_input("Year from", min_value=1900, max_value=2025, value=1900)
+        with c4:
+            year_to = st.number_input("Year to", min_value=1900, max_value=2025, value=2025)
+        submitted = st.form_submit_button("🔍 Search")
 
-        with col1:
-            if details.get("poster_url"):
-                st.image(details["poster_url"], use_container_width=True)
+    if submitted and query:
+        params = {"q": query, "top_k": 20, "min_rating": min_rating, "year_from": year_from, "year_to": year_to}
+        if genre_filter.strip():
+            params["genre"] = genre_filter.strip()
+        data = fetch("/search", params)
+        if data:
+            st.markdown(f"<div class='section-header'>Found {data['total']} results for \"{query}\"</div>", unsafe_allow_html=True)
+            render_grid(data["results"], cols=4, show_score=True)
 
-        with col2:
-            st.header(details["title"])
-            st.caption(details.get("release_date", ""))
-            st.write(details.get("overview", "No overview available"))
+# ── GENRE BROWSER ─────────────────────────────────────────────────────────────
+elif page_nav == "🎭 Browse by Genre":
+    st.markdown("<div class='section-header'>Browse by Genre</div>", unsafe_allow_html=True)
 
-            if details.get("genres"):
-                genres = ", ".join(g["name"] for g in details["genres"])
-                st.markdown(f"**Genres:** {genres}")
+    genres_data = fetch("/genres")
+    if genres_data:
+        genres = genres_data["genres"]
+        names = [f"{g['name']} ({g['count']:,})" for g in genres]
+        raw_names = [g["name"] for g in genres]
 
-        st.divider()
+        c1, c2 = st.columns([2, 1])
+        with c1:
+            selected_label = st.selectbox("Pick a genre", names)
+        with c2:
+            sort_by = st.selectbox("Sort by", ["popularity", "vote_average", "release_date"])
 
-        bundle = api_get(
-            "/movie/search",
-            {
-                "query": title,
-                "tfidf_top_n": 12,
-                "genre_limit": 12
-            }
-        )
+        selected_genre = raw_names[names.index(selected_label)]
+        data = fetch(f"/genre/{selected_genre}", {"limit": 24, "sort_by": sort_by})
+        if data:
+            st.markdown(f"<div class='section-header'>{selected_genre} — {data['total']:,} films</div>", unsafe_allow_html=True)
+            render_grid(data["results"], cols=4)
 
-        if bundle:
-            # TF-IDF recommendations
-            st.subheader("🤖 Similar Movies")
-            cols = st.columns(6)
-            for i, rec in enumerate(bundle["tfidf_recommendations"]):
-                if rec.get("tmdb"):
-                    with cols[i % 6]:
-                        movie_card(rec["tmdb"])
+# ── RECOMMENDATIONS ───────────────────────────────────────────────────────────
+elif page_nav == "🤖 Get Recommendations":
+    st.markdown("<div class='section-header'>AI-Powered Recommendations</div>", unsafe_allow_html=True)
+    st.markdown("Pick a movie you love and we'll find semantically similar ones using FAISS vector search.")
 
-            # Genre recommendations
-            st.subheader("🎭 Same Genre")
-            cols = st.columns(6)
-            for i, g in enumerate(bundle["genre_recommendations"]):
-                with cols[i % 6]:
-                    movie_card(g)
+    movie_title = st.text_input("Search for a movie to base recommendations on", placeholder="e.g. The Dark Knight")
+    top_k = st.slider("Number of recommendations", 5, 30, 10)
 
-        st.divider()
+    if movie_title:
+        # Search for the movie first
+        results = fetch("/search", {"q": movie_title, "top_k": 5})
+        if results and results["results"]:
+            candidates = results["results"]
+            titles = [f"{m['title']} ({m.get('year', '?')}) — ⭐ {m['vote_average']}" for m in candidates]
+            chosen_label = st.selectbox("Select the movie:", titles)
+            chosen = candidates[titles.index(chosen_label)]
 
-# =============================
-# HOME PAGE
-# =============================
-if mode == "🏠 Home":
-    st.title("🔥 Discover Movies")
+            st.markdown("---")
+            col_a, col_b = st.columns([1, 3])
+            with col_a:
+                st.markdown(f"**{chosen['title']}**")
+                st.markdown(f"⭐ {chosen['vote_average']} | 📅 {chosen.get('year','?')}")
+                st.markdown(genre_badges(chosen['genres']), unsafe_allow_html=True)
+            with col_b:
+                st.info(chosen.get("overview", ""))
 
-    movies = api_get("/home", {"category": category, "limit": 24})
+            if st.button("🎯 Get Recommendations"):
+                reco_data = fetch(f"/recommend/{chosen['id']}", {"top_k": top_k})
+                if reco_data:
+                    st.markdown(f"<div class='section-header'>Because you like: {chosen['title']}</div>", unsafe_allow_html=True)
+                    render_grid(reco_data["recommendations"], cols=4, show_score=True)
 
-    if movies:
-        cols = st.columns(6)
-        for i, m in enumerate(movies):
-            with cols[i % 6]:
-                movie_card(m, clickable=True)
+# ── STATS ─────────────────────────────────────────────────────────────────────
+elif page_nav == "📊 Stats":
+    st.markdown("<div class='section-header'>Dataset Statistics</div>", unsafe_allow_html=True)
+    data = fetch("/stats")
+    if data:
+        c1, c2, c3 = st.columns(3)
+        c1.metric("Total Movies", f"{data['total_movies']:,}")
+        c2.metric("Avg Rating", f"{data['avg_rating']} / 10")
+        c3.metric("Year Range", f"{data['year_range']['min']} – {data['year_range']['max']}")
 
-# =============================
-# SEARCH PAGE
-# =============================
-if mode == "🔍 Search Movie":
-    st.title("🔍 Search Movies")
+        st.markdown("#### Top Languages")
+        lang_df = {"Language": list(data["languages"].keys()), "Count": list(data["languages"].values())}
+        st.bar_chart(lang_df, x="Language", y="Count")
 
-    query = st.text_input("Enter movie name")
-
-    if query:
-        data = api_get("/tmdb/search", {"query": query})
-
-        if data and data.get("results"):
-            st.subheader("Search Results")
-
-            cols = st.columns(6)
-            for i, m in enumerate(data["results"][:18]):
-                card = {
-                    "tmdb_id": m["id"],
-                    "title": m.get("title"),
-                    "poster_url": TMDB_IMG + m["poster_path"] if m.get("poster_path") else None,
-                    "vote_average": m.get("vote_average")
-                }
-                with cols[i % 6]:
-                    movie_card(card, clickable=True)
+        genres_data = fetch("/genres")
+        if genres_data:
+            st.markdown("#### Genre Distribution")
+            top10 = genres_data["genres"][:10]
+            g_df = {"Genre": [g["name"] for g in top10], "Count": [g["count"] for g in top10]}
+            st.bar_chart(g_df, x="Genre", y="Count")
