@@ -2,9 +2,11 @@ import streamlit as st
 import requests
 from typing import Optional
 import math
+import os
 
+API = os.getenv("API_URL", "http://localhost:8000")
 # ── Config ────────────────────────────────────────────────────────────────────
-API = "http://127.0.0.1:8000"
+API = "http://movie-api.railway.internal:8000"
 TMDB_IMG = "https://image.tmdb.org/t/p/w500"
 
 st.set_page_config(
