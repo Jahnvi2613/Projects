@@ -17,7 +17,8 @@ app = FastAPI(title="Calendly Clone API", version="1.0.0", lifespan=lifespan)
 origins = [
     "http://localhost:5173",
     "http://localhost:3000",
-    "https://calendly-clone-lac.vercel.app/dashboard", # Your specific Vercel URL
+    "https://calendly-clone-lac.vercel.app", # Add your Vercel URL here
+
 ]
 
 app.add_middleware(
